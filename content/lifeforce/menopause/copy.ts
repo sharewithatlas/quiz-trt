@@ -7,7 +7,7 @@ export const MENOPAUSE_COPY: CopyMap = {
   'hero.eyebrow': '',
   'hero.headline': '',
   'hero.subhead': '',
-  'hero.urgency_banner': '',
+  'below_fold.urgency_banner': '',
 
   'submit.headline': '',
   'submit.intro': '',

@@ -25,7 +25,7 @@ export const menopauseFunnel: FunnelConfig = {
 
   questions: [
     {
-      id: '1', type: 'question', inputType: 'single',
+      id: '1', type: 'question', inputType: 'single', layout: 'grid',
       section: 'INTRO', sectionPosition: '',
       text: 'Select your age range',
       options: ['<35', '35-39', '40-45', '45-49', '50-54', '55+']
@@ -73,7 +73,14 @@ export const menopauseFunnel: FunnelConfig = {
   rules: [],
   calculations: {},
   copy: MENOPAUSE_COPY,
-  brand: { ...LIFEFORCE_BRAND, title: 'Menopause Quiz', description: 'Get a free hormone optimization plan tailored to your phase.' },
+  brand: {
+    ...LIFEFORCE_BRAND,
+    title: 'Menopause Quiz',
+    description: 'Get a free hormone optimization plan tailored to your phase.',
+    images: {
+      hero: '/assets/lifeforce/menopause/menopause-lander.25745e68.webp'
+    }
+  },
   resultsLayout: [
     'results.greeting_static',
     'results.diagnosis.body_title',

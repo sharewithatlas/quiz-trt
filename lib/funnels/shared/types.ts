@@ -36,6 +36,9 @@ export type Question = {
   maxSelections?: number;
   required?: boolean;          // default true
   autoAdvance?: boolean;       // single + dropdown only
+  /** Visual layout for option buttons. 'list' = vertical full-width stack,
+   *  'grid' = responsive 2-3 column grid. Default 'list'. */
+  layout?: 'list' | 'grid';
   section?: string;
   sectionPosition?: string;
   /** Branching shorthand. Keys = answer values, '*' = wildcard. Values = step ref or path. */
@@ -171,6 +174,12 @@ export type BrandConfig = {
   title?: string;
   description?: string;
   images?: Record<string, string | string[]>;
+  /** Footer rendered on every funnel page. Empty fields render as <Placeholder>. */
+  footer?: {
+    legalLinks?: string;     // e.g. "Terms · Privacy · Shipping · Pharmacy"
+    disclaimer?: string;     // FDA / results-vary / medical disclaimer paragraph
+    entity?: string;         // company name + address + entity info
+  };
 };
 
 // ---------------- Copy ----------------

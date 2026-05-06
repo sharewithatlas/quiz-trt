@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { getFunnel, listFunnelSlugs } from '@/lib/funnels/registry';
 import { FunnelProvider } from '@/components/FunnelProvider';
 
@@ -24,6 +25,7 @@ export default async function FunnelLayout({
     <FunnelProvider funnel={funnel}>
       <Header brand={funnel.brand} />
       <main>{children}</main>
+      <Footer />
     </FunnelProvider>
   );
 }

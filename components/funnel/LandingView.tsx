@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Copy } from '@/components/Copy';
 import { OptionButton } from '@/components/OptionButton';
 import { useFunnel } from '@/components/FunnelProvider';
@@ -101,6 +102,11 @@ export function LandingView() {
     ? `${basePath(funnel)}/${funnel.flow[1].type === 'question' ? `questions/${funnel.flow[1].id}` : funnel.flow[1].type}`
     : `${basePath(funnel)}/submit`;
 
+  const heroImage = funnel.brand.images?.hero as string | undefined;
+  const optionsLayout = q1?.layout === 'grid'
+    ? 'grid grid-cols-2 gap-3 sm:grid-cols-3'
+    : 'space-y-3';
+
   return (
     <div>
       <section className="container-prose pt-8 pb-12 md:pt-12">
@@ -108,10 +114,16 @@ export function LandingView() {
           <Copy key={slot} slot={slot} />
         ))}
 
+        {heroImage && (
+          <div className="my-6 overflow-hidden rounded-2xl">
+            <Image src={heroImage} alt="" width={1200} height={750} priority className="w-full h-auto" />
+          </div>
+        )}
+
         {q1 && (
           <div className="mt-8">
             <h2 className="font-serif text-2xl font-semibold text-ink">{q1.text}</h2>
-            <div className={`mt-6 ${q1.options && q1.options.length > 6 ? 'grid grid-cols-2 gap-3 sm:grid-cols-3' : 'space-y-3'}`}>
+            <div className={`mt-6 ${optionsLayout}`}>
               {q1.options?.map((opt) => (
                 <OptionButton key={opt} label={opt} selected={draft === opt} onClick={() => setDraft(opt)} />
               ))}

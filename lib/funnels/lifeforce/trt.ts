@@ -113,7 +113,14 @@ export const trtFunnel: FunnelConfig = {
   rules: [],
   calculations: {},
   copy: TRT_COPY,
-  brand: { ...LIFEFORCE_BRAND, title: 'TRT Quiz', description: 'Find out if testosterone replacement therapy is right for you.' },
+  brand: {
+    ...LIFEFORCE_BRAND,
+    title: 'TRT Quiz',
+    description: 'Find out if testosterone replacement therapy is right for you.',
+    images: {
+      hero: '/assets/lifeforce/trt/FoundersPlatformsHero-new.5d73646c.webp'
+    }
+  },
   resultsLayout: [
     'results.estimate_card',
     'results.intro_subhead',
