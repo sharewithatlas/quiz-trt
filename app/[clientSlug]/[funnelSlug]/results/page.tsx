@@ -30,9 +30,11 @@ export default function ResultsPage() {
     }, funnel.tracking);
   }, [funnel, useStore]);
 
-  const resultSlots = Object.keys(funnel.copy)
-    .filter((k) => k.startsWith('results.'))
-    .sort();
+  // Order: explicit funnel.resultsLayout if set, otherwise declaration order
+  // from the copy map (filtered to results.*).
+  const resultSlots = funnel.resultsLayout && funnel.resultsLayout.length > 0
+    ? funnel.resultsLayout
+    : Object.keys(funnel.copy).filter((k) => k.startsWith('results.'));
 
   return (
     <div className="container-prose py-10 space-y-8">

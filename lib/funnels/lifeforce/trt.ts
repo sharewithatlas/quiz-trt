@@ -114,6 +114,21 @@ export const trtFunnel: FunnelConfig = {
   calculations: {},
   copy: TRT_COPY,
   brand: { ...LIFEFORCE_BRAND, title: 'TRT Quiz', description: 'Find out if testosterone replacement therapy is right for you.' },
+  resultsLayout: [
+    'results.estimate_card',
+    'results.intro_subhead',
+    'results.narrative_block',
+    'results.founder_quote',
+    'results.founder_attribution',
+    'results.value_prop_paragraph',
+    'results.next_steps',
+    'results.countdown_banner_1',
+    'results.pricing_compare',
+    'results.why_lifeforce',
+    'results.pricing_compare_2',
+    'results.featured_in',
+    'results.final_cta'
+  ],
   klaviyo: {
     // Wire when client provides Klaviyo list ID + key.
     // Example mapping (edit to match Klaviyo property names):

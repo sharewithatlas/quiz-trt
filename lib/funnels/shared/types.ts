@@ -194,6 +194,11 @@ export type FunnelConfig = {
   copy: CopyMap;
   brand: BrandConfig;
 
+  /** Optional explicit ordering for `results.*` slots on the results page.
+   *  When set, only listed slots render (in this order). When omitted,
+   *  all `results.*` slots render in their declaration order from `copy`. */
+  resultsLayout?: string[];
+
   klaviyo: KlaviyoMapping;
   tracking?: TrackingOverrides;
 };
