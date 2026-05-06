@@ -205,12 +205,27 @@ export type FunnelConfig = {
 
   /** Optional explicit ordering for `results.*` slots on the results page.
    *  When set, only listed slots render (in this order). When omitted,
-   *  all `results.*` slots render in their declaration order from `copy`. */
+   *  all `results.*` slots render in their declaration order from `copy`.
+   *  Ignored when `resultsBlocks` is set. */
   resultsLayout?: string[];
+
+  /** Typed structured persuasion blocks for the landing page.
+   *  When set, LandingView renders these in order INSTEAD of the flat
+   *  hero.* / below_fold.* slot iteration. */
+  landingBlocks?: LandingBlock[];
+
+  /** Typed structured persuasion blocks for the results page.
+   *  When set, ResultsView renders these in order INSTEAD of the flat
+   *  results.* slot iteration. */
+  resultsBlocks?: ResultsBlock[];
 
   klaviyo: KlaviyoMapping;
   tracking?: TrackingOverrides;
 };
+
+// Re-export block types from blocks.ts for convenience
+import type { LandingBlock, ResultsBlock } from './blocks';
+export type { LandingBlock, ResultsBlock } from './blocks';
 
 // ---------------- Helpers ----------------
 
