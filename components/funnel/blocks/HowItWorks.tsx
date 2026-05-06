@@ -25,8 +25,8 @@ export function HowItWorks({ block }: { block: HowItWorksBlock }) {
                 {step.titleSlot && <Copy slot={step.titleSlot} description={`Step ${num} title`} className="font-semibold text-ink" />}
                 {step.bodySlot && <Copy slot={step.bodySlot} description={`Step ${num} body`} className="text-sm text-ink-700" as="p" />}
                 {img && (
-                  <div className="mt-2 overflow-hidden rounded-lg">
-                    <Image src={img} alt="" width={600} height={300} className="w-full h-auto" />
+                  <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg">
+                    <Image src={img} alt="" fill sizes="(max-width: 640px) 100vw, 480px" className="object-cover" />
                   </div>
                 )}
               </div>

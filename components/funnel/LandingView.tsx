@@ -133,8 +133,8 @@ export function LandingView() {
     return (
       <div className="container-prose pt-8 pb-12 md:pt-12">
         {heroImage && (
-          <div className="mb-6 overflow-hidden rounded-2xl">
-            <Image src={heroImage} alt="" width={1200} height={750} priority className="w-full h-auto" />
+          <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-2xl">
+            <Image src={heroImage} alt="" fill priority sizes="(max-width: 640px) 100vw, 640px" className="object-cover" />
           </div>
         )}
         {funnel.landingBlocks!.map((b, i) => {
@@ -145,6 +145,11 @@ export function LandingView() {
           return <BlockRenderer key={i} block={b} />;
         })}
         {!renderedQ1 && q1Card}
+        <div className="mt-8 text-center">
+          <Link href={skipHref} className="text-sm text-ink-700 underline">
+            Skip to quiz →
+          </Link>
+        </div>
       </div>
     );
   }
@@ -155,8 +160,8 @@ export function LandingView() {
       <section className="container-prose pt-8 pb-12 md:pt-12">
         {heroSlots.map((slot) => <Copy key={slot} slot={slot} />)}
         {heroImage && (
-          <div className="my-6 overflow-hidden rounded-2xl">
-            <Image src={heroImage} alt="" width={1200} height={750} priority className="w-full h-auto" />
+          <div className="relative my-6 aspect-video w-full overflow-hidden rounded-2xl">
+            <Image src={heroImage} alt="" fill priority sizes="(max-width: 640px) 100vw, 640px" className="object-cover" />
           </div>
         )}
         {q1Card}
