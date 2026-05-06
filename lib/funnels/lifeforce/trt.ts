@@ -6,6 +6,7 @@
 import type { FunnelConfig, LandingBlock, ResultsBlock, StepRef } from '../shared/types';
 import { LIFEFORCE_BRAND } from '@/content/lifeforce/brand';
 import { TRT_COPY } from '@/content/lifeforce/trt/copy';
+import { TRT_PRICING } from './trt-pricing';
 
 const flow: StepRef[] = [
   { type: 'question', id: '1' },
@@ -36,10 +37,11 @@ const landingBlocks: LandingBlock[] = [
     type: 'how-it-works',
     headingSlot: 'landing.how_it_works.heading',
     steps: [
+      // Step 1 has body in source; steps 2-4 are title-only — no bodySlot to avoid empty <Placeholder>.
       { titleSlot: 'landing.how_it_works.step_1.title', bodySlot: 'landing.how_it_works.step_1.body', imageKey: 'quizStep1' },
-      { titleSlot: 'landing.how_it_works.step_2.title', bodySlot: 'landing.how_it_works.step_2.body', imageKey: 'measureBaseline' },
-      { titleSlot: 'landing.how_it_works.step_3.title', bodySlot: 'landing.how_it_works.step_3.body' },
-      { titleSlot: 'landing.how_it_works.step_4.title', bodySlot: 'landing.how_it_works.step_4.body' }
+      { titleSlot: 'landing.how_it_works.step_2.title', imageKey: 'measureBaseline' },
+      { titleSlot: 'landing.how_it_works.step_3.title' },
+      { titleSlot: 'landing.how_it_works.step_4.title' }
     ]
   },
   {
@@ -75,10 +77,12 @@ const resultsBlocks: ResultsBlock[] = [
     type: 'how-it-works',
     headingSlot: 'results.next_steps.heading',
     steps: [
-      { titleSlot: 'results.next_steps.step_1.title', bodySlot: 'results.next_steps.step_1.body' },
+      // Source has body only on step 2 ("Measure your baseline" — narrow product range vs custom plan).
+      // Steps 1, 3, 4 are title-only; no bodySlot to avoid empty <Placeholder>.
+      { titleSlot: 'results.next_steps.step_1.title' },
       { titleSlot: 'results.next_steps.step_2.title', bodySlot: 'results.next_steps.step_2.body' },
-      { titleSlot: 'results.next_steps.step_3.title', bodySlot: 'results.next_steps.step_3.body' },
-      { titleSlot: 'results.next_steps.step_4.title', bodySlot: 'results.next_steps.step_4.body' }
+      { titleSlot: 'results.next_steps.step_3.title' },
+      { titleSlot: 'results.next_steps.step_4.title' }
     ]
   },
   { type: 'countdown', durationSeconds: 28800, headlineSlot: 'results.countdown_1.headline' },
@@ -94,14 +98,16 @@ const resultsBlocks: ResultsBlock[] = [
       savingsSlot: 'results.pricing_1.primary.savings',
       bulletsSlot: 'results.pricing_1.primary.bullets',
       termsSlot: 'results.pricing_1.primary.terms',
-      ctaLabelSlot: 'results.pricing_1.primary.cta_label'
+      ctaLabelSlot: 'results.pricing_1.primary.cta_label',
+      ctaHref: TRT_PRICING.membership.ctaHref || undefined
     },
     secondary: {
       badgeSlot: 'results.pricing_1.secondary.badge',
       titleSlot: 'results.pricing_1.secondary.title',
       priceCurrentSlot: 'results.pricing_1.secondary.price_current',
       bulletsSlot: 'results.pricing_1.secondary.bullets',
-      ctaLabelSlot: 'results.pricing_1.secondary.cta_label'
+      ctaLabelSlot: 'results.pricing_1.secondary.cta_label',
+      ctaHref: TRT_PRICING.diagnosticOnly.ctaHref || undefined
     }
   },
   {
@@ -127,6 +133,10 @@ const resultsBlocks: ResultsBlock[] = [
     totalSlot: 'results.included.total'
   },
   { type: 'countdown', durationSeconds: 28800, headlineSlot: 'results.countdown_2.headline' },
+  // Source has 2 press quotes (Pete Nastasi — Sports Nutrition Coach, Barret Wertz — Editorial Director).
+  // V1 uses single-quote FeaturedIn. Recommended choice: Pete Nastasi — topical authority for TRT
+  // (sports nutrition aligns with testosterone/performance positioning more directly than commerce-editorial).
+  // Press logos preserved across full strip.
   {
     type: 'featured-in',
     headingSlot: 'results.featured_in.heading',
