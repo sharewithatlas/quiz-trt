@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { TrackingScripts } from '@/components/TrackingScripts';
-import { BRAND } from '@/content/brand';
 
 export const metadata: Metadata = {
-  title: BRAND.title,
-  description: BRAND.description
+  title: 'Quiz Funnels',
+  description: 'Multi-client quiz funnel system.'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

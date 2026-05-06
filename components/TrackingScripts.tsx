@@ -1,5 +1,11 @@
 import Script from 'next/script';
-import { PIXELS } from '@/lib/tracking';
+
+const PIXELS = {
+  meta: process.env.NEXT_PUBLIC_META_PIXEL_ID,
+  ga4: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID,
+  tiktok: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID,
+  googleAds: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
+};
 
 export function TrackingScripts() {
   return (

@@ -1,47 +1,166 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import Link from 'next/link';
-import { useQuiz, type Answer } from '@/lib/quiz-store';
-import { events } from '@/lib/tracking';
-import { type Question, US_STATES } from '@/lib/quiz-data';
 import { OptionButton } from './OptionButton';
 import { SectionTag } from './SectionTag';
-import { COPY, type CopySlot } from '@/content/copy';
+import { Copy } from './Copy';
+import { useFunnel } from './FunnelProvider';
+import { useQuizStore } from '@/lib/funnels/shared/quiz-store';
+import { US_STATES } from '@/lib/funnels/shared/options';
+import { resolveNextHref } from '@/lib/funnels/shared/branching';
+import {
+  trackQuizEvent,
+  markStepEntered,
+  durationSinceStepEntered
+} from '@/lib/funnels/shared/tracking';
+import type { Answer, Question, StepRef } from '@/lib/funnels/shared/types';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
 const YEARS = Array.from({ length: 2003 - 1934 + 1 }, (_, i) => String(2003 - i));
 
-type Props = {
-  question: Question;
-  nextHref: string;
-  backHref?: string;
-};
+type Props = { question: Question; backHref?: string };
 
-export function QuestionCard({ question, nextHref, backHref }: Props) {
-  const { answers, setAnswer } = useQuiz();
-  const existing = answers[question.id];
+export function QuestionCard({ question, backHref }: Props) {
+  const funnel = useFunnel();
+  const useStore = useQuizStore(funnel.clientSlug, funnel.funnelSlug, funnel.version);
+  const existing = useStore((s) => s.answers[question.id]);
+  const setAnswer = useStore((s) => s.setAnswer);
+  const pushHistory = useStore((s) => s.pushHistory);
   const [draft, setDraft] = useState<Answer | undefined>(existing);
+  const [stepStartIso, setStepStartIso] = useState<string>('');
   const router = useRouter();
+  const fired = useRef(false);
+
+  // step entered: question_viewed
+  useEffect(() => {
+    const iso = markStepEntered(question.id);
+    setStepStartIso(iso);
+    trackQuizEvent({
+      clientSlug: funnel.clientSlug,
+      funnelSlug: funnel.funnelSlug,
+      funnelVersion: funnel.version,
+      sessionId: useStore.getState().sessionId,
+      timestamp: iso,
+      event: 'question_viewed',
+      stepId: question.id,
+      stepType: 'question',
+      questionId: question.id,
+      questionText: question.text,
+      stepViewStartedAt: iso
+    }, funnel.tracking);
+  }, [question.id, funnel, useStore]);
+
+  const isMulti = question.inputType === 'multi' || question.inputType === 'multi-limited';
+  const selected: string[] = isMulti
+    ? (Array.isArray(draft) ? draft : [])
+    : draft ? [draft as string] : [];
+  const max = question.maxSelections ?? Infinity;
+  const atMax = isMulti && selected.length >= max;
+
+  const dropdownOptions = question.options ?? (question.inputType === 'dropdown' ? US_STATES : []);
 
   const canProceed = (() => {
+    if (question.required === false) return true;
     if (!draft) return false;
-    if (question.type === 'dob') {
+    if (question.inputType === 'dob') {
       const d = draft as { day: string; month: string; year: string };
       return Boolean(d?.day && d?.month && d?.year);
     }
+    if (isMulti) return Array.isArray(draft) && draft.length > 0;
     return Boolean(draft);
   })();
 
-  function handleNext() {
-    if (!canProceed || !draft) return;
-    setAnswer(question.id, draft);
-    events.questionAnswered(question.id);
-    router.push(nextHref);
+  function fireAnswerChanged(value: Answer, label?: string) {
+    trackQuizEvent({
+      clientSlug: funnel.clientSlug,
+      funnelSlug: funnel.funnelSlug,
+      funnelVersion: funnel.version,
+      sessionId: useStore.getState().sessionId,
+      timestamp: new Date().toISOString(),
+      event: 'answer_changed',
+      stepId: question.id,
+      stepType: 'question',
+      questionId: question.id,
+      questionText: question.text,
+      answer: { value, label }
+    }, funnel.tracking);
   }
+
+  function fireAndAdvance(value: Answer, label?: string) {
+    if (fired.current) return;
+    fired.current = true;
+    setAnswer(question.id, value);
+    pushHistory(question.id);
+    const now = new Date().toISOString();
+    const dur = durationSinceStepEntered(question.id);
+    trackQuizEvent({
+      clientSlug: funnel.clientSlug,
+      funnelSlug: funnel.funnelSlug,
+      funnelVersion: funnel.version,
+      sessionId: useStore.getState().sessionId,
+      timestamp: now,
+      event: 'answer_committed',
+      stepId: question.id,
+      stepType: 'question',
+      questionId: question.id,
+      questionText: question.text,
+      answer: { value, label },
+      stepViewStartedAt: stepStartIso,
+      stepViewDurationMs: dur
+    }, funnel.tracking);
+    const ref: StepRef = { type: 'question', id: question.id };
+    const { href, ruleFiredId, ruleFiredAction } = resolveNextHref(useStore.getState(), funnel, ref);
+    trackQuizEvent({
+      clientSlug: funnel.clientSlug,
+      funnelSlug: funnel.funnelSlug,
+      funnelVersion: funnel.version,
+      sessionId: useStore.getState().sessionId,
+      timestamp: new Date().toISOString(),
+      event: 'question_completed',
+      stepId: question.id,
+      stepType: 'question',
+      questionId: question.id,
+      questionText: question.text,
+      answer: { value, label },
+      ruleFiredId,
+      ruleFiredAction,
+      nextRoute: href,
+      stepViewStartedAt: stepStartIso,
+      stepViewDurationMs: durationSinceStepEntered(question.id)
+    }, funnel.tracking);
+    router.push(href);
+  }
+
+  function pickSingle(opt: string) {
+    setDraft(opt);
+    fireAnswerChanged(opt, opt);
+    if (question.autoAdvance && (question.inputType === 'single' || question.inputType === 'dropdown')) {
+      setTimeout(() => fireAndAdvance(opt, opt), 200);
+    }
+  }
+
+  function toggleMulti(opt: string) {
+    const next = selected.includes(opt) ? selected.filter((s) => s !== opt) : (selected.length < max ? [...selected, opt] : selected);
+    setDraft(next);
+    fireAnswerChanged(next);
+  }
+
+  function setDob(v: { day: string; month: string; year: string }) {
+    setDraft(v);
+    fireAnswerChanged(v);
+  }
+
+  function handleNextClick() {
+    if (!canProceed || draft === undefined) return;
+    fireAndAdvance(draft);
+  }
+
+  // Subhead from copy registry: prefer slot `q{id}.subhead`, fall back to inline subhead.
+  const subhead = funnel.copy[`q${question.id}.subhead`] || question.subhead;
 
   return (
     <section className="container-prose pt-6 pb-12">
@@ -52,46 +171,41 @@ export function QuestionCard({ question, nextHref, backHref }: Props) {
       )}
 
       <div className="my-4">
-        <SectionTag section={question.section} position={question.sectionPosition} />
+        <SectionTag section={question.section ?? ''} position={question.sectionPosition} />
       </div>
 
-      <h1 className="font-serif text-3xl leading-tight text-ink md:text-4xl">
-        {question.text}
-      </h1>
-
-      {(() => {
-        const slot = `q${question.id}.subhead` as CopySlot;
-        const fromRegistry = (slot in COPY) ? COPY[slot] : '';
-        const subhead = fromRegistry || question.subhead;
-        return subhead ? <p className="mt-3 text-ink-700">{subhead}</p> : null;
-      })()}
+      <h1 className="font-serif text-3xl leading-tight text-ink md:text-4xl">{question.text}</h1>
+      {subhead && <p className="mt-3 text-ink-700">{subhead}</p>}
+      {question.inputType === 'multi-limited' && (
+        <div className="mt-2 text-xs text-ink-700">{selected.length} / {max} selected</div>
+      )}
 
       <div className="mt-8 space-y-3">
-        {question.type === 'single' && question.options?.map((opt) => (
-          <OptionButton
-            key={opt}
-            label={opt}
-            selected={draft === opt}
-            onClick={() => setDraft(opt)}
-          />
+        {question.inputType === 'single' && question.options?.map((opt) => (
+          <OptionButton key={opt} label={opt} selected={draft === opt} onClick={() => pickSingle(opt)} />
         ))}
 
-        {question.type === 'dropdown' && (
+        {isMulti && question.options?.map((opt) => {
+          const isSelected = selected.includes(opt);
+          return (
+            <OptionButton key={opt} label={opt} selected={isSelected} variant="checkbox"
+              disabled={!isSelected && atMax} onClick={() => toggleMulti(opt)} />
+          );
+        })}
+
+        {question.inputType === 'dropdown' && (
           <select
             value={(draft as string) ?? ''}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => pickSingle(e.target.value)}
             className="w-full rounded-xl border border-ink/20 bg-white/60 px-4 py-3 text-base"
           >
             <option value="">Select</option>
-            {US_STATES.map((s) => <option key={s}>{s}</option>)}
+            {dropdownOptions.map((s) => <option key={s}>{s}</option>)}
           </select>
         )}
 
-        {question.type === 'dob' && (
-          <DOBSelect
-            value={draft as { day: string; month: string; year: string } | undefined}
-            onChange={setDraft}
-          />
+        {question.inputType === 'dob' && (
+          <DOBSelect value={draft as { day: string; month: string; year: string } | undefined} onChange={setDob} />
         )}
       </div>
 
@@ -99,7 +213,7 @@ export function QuestionCard({ question, nextHref, backHref }: Props) {
         <button
           type="button"
           disabled={!canProceed}
-          onClick={handleNext}
+          onClick={handleNextClick}
           className="rounded-xl bg-ink px-8 py-3 font-semibold text-cream transition disabled:cursor-not-allowed disabled:opacity-40"
         >
           Next
@@ -114,12 +228,11 @@ function DOBSelect({
   onChange
 }: {
   value: { day: string; month: string; year: string } | undefined;
-  onChange: (v: Answer) => void;
+  onChange: (v: { day: string; month: string; year: string }) => void;
 }) {
   const v = value ?? { day: '', month: '', year: '' };
   const update = (key: 'day' | 'month' | 'year') => (e: React.ChangeEvent<HTMLSelectElement>) =>
     onChange({ ...v, [key]: e.target.value });
-
   const cls = 'w-full rounded-xl border border-ink/20 bg-white/60 px-4 py-3 text-base';
   return (
     <div className="grid grid-cols-3 gap-3">

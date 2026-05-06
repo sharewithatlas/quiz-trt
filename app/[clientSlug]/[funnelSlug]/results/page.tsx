@@ -1,0 +1,49 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Copy } from '@/components/Copy';
+import { Placeholder } from '@/components/Placeholder';
+import { useFunnel } from '@/components/FunnelProvider';
+import { useQuizStore } from '@/lib/funnels/shared/quiz-store';
+import { trackQuizEvent, markStepEntered } from '@/lib/funnels/shared/tracking';
+
+export default function ResultsPage() {
+  const funnel = useFunnel();
+  const useStore = useQuizStore(funnel.clientSlug, funnel.funnelSlug, funnel.version);
+  const [firstName, setFirstName] = useState('');
+
+  useEffect(() => {
+    const iso = markStepEntered('results');
+    if (typeof window !== 'undefined') {
+      setFirstName(sessionStorage.getItem(`${funnel.clientSlug}:${funnel.funnelSlug}:firstName`) ?? '');
+    }
+    trackQuizEvent({
+      clientSlug: funnel.clientSlug,
+      funnelSlug: funnel.funnelSlug,
+      funnelVersion: funnel.version,
+      sessionId: useStore.getState().sessionId,
+      timestamp: iso,
+      event: 'results_viewed',
+      stepId: 'results',
+      stepType: 'results',
+      stepViewStartedAt: iso
+    }, funnel.tracking);
+  }, [funnel, useStore]);
+
+  const resultSlots = Object.keys(funnel.copy)
+    .filter((k) => k.startsWith('results.'))
+    .sort();
+
+  return (
+    <div className="container-prose py-10 space-y-8">
+      <h1 className="font-serif text-3xl text-ink">
+        {firstName ? `Hi ${firstName}!` : 'Your results'}
+      </h1>
+      {resultSlots.length === 0 ? (
+        <Placeholder name="results.*" description="Add slots to the funnel's copy registry." height="200px" />
+      ) : (
+        resultSlots.map((slot) => <Copy key={slot} slot={slot} />)
+      )}
+    </div>
+  );
+}
